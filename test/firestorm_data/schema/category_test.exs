@@ -10,4 +10,6 @@ defmodule FirestormData.CategoryTest do
     elixir_changeset = %Category{} |> Category.changeset(%{title: "Elixir"})
     assert {:ok, _} = Repo.insert elixir_changeset
   end
+
+  test "find its three threads with the most recent posts"
 end

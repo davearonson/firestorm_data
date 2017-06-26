@@ -46,6 +46,8 @@ defmodule FirestormData.PostTest do
 
   end
 
+  test "find those mentioning a string"
+
   defp create_other_users(_) do
     adam =
       %User{username: "adam", email: "adam@dailydrip.com", name: "Adam Dill"}

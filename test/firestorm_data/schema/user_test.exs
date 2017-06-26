@@ -1,4 +1,5 @@
 defmodule FirestormData.UserTest do
+  import Ecto.Query
   alias FirestormData.{User, Repo}
   use ExUnit.Case
 
@@ -37,5 +38,12 @@ defmodule FirestormData.UserTest do
     {:error, new_changeset} = Repo.insert(jc2)
     assert {:email, {"has already been taken", []}} in new_changeset.errors
   end
-  
+
+  describe "with posts" do
+
+    test "find all a user's posts"
+    test "find all threads this user has posted to"
+
+  end
+
 end

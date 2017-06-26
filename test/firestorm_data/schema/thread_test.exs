@@ -15,4 +15,6 @@ defmodule FirestormData.ThreadTest do
 
     assert {:ok, _} = Repo.insert otp_changeset
   end
+
+  test "count posts"
 end
