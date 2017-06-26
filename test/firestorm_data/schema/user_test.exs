@@ -40,9 +40,47 @@ defmodule FirestormData.UserTest do
   end
 
   describe "with posts" do
+    alias FirestormData.{Category, Thread, Post}
 
-    test "find all a user's posts"
-    test "find all threads this user has posted to"
+    setup do
+      {:ok, category} = %Category{title: "Elixir"} |> Repo.insert
+      {:ok, t1} = %Thread{title: "OTP is neat", category_id: category.id}
+                  |> Repo.insert
+      {:ok, t2} = %Thread{title: "OTP is great", category_id: category.id}
+                  |> Repo.insert
+      {:ok, u1} = %User{username: "user1",
+                        email: "u1@example.com",
+                        name: "joe shmoe"} |> Repo.insert
+      posts = 1..3 |> Enum.map(fn(i) ->
+        query = %Post{thread_id: t1.id, body: "post #{i}", user_id: u1.id}
+        {:ok, post} = query |> Repo.insert
+        post
+      end)
+      more_posts = 1..3 |> Enum.map(fn(i) ->
+        query = %Post{thread_id: t2.id, body: "post #{i}", user_id: u1.id}
+        {:ok, post} = query |> Repo.insert
+        post
+      end)
+      {:ok, category: category, threads: [t1, t2], u1: u1, posts: posts ++ more_posts}
+    end
+
+    test "find all a user's posts", %{posts: posts, u1: u1} do
+      query = from p in Post, where: p.user_id == ^u1.id, select: [:id]
+      post_ids_found = query |> Repo.all() |> Enum.map(&(&1.id))
+      post_ids_expected = posts |> Enum.map(&(&1.id))
+      assert post_ids_found == post_ids_expected
+    end
+
+    test "find all threads this user has posted to",
+         %{threads: threads, u1: u1} do
+      query = from p in Post,
+              where: p.user_id == ^u1.id,
+              select: [:thread_id],
+              distinct: true
+      thread_ids_found = query |> Repo.all() |> Enum.map(&(&1.thread_id))
+      thread_ids_expected = threads |> Enum.map(&(&1.id))
+      assert thread_ids_found == thread_ids_expected
+    end
 
   end
 
