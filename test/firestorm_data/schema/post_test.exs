@@ -27,26 +27,32 @@ defmodule FirestormData.PostTest do
   describe "given some posts" do
     setup [:create_other_users, :create_sample_posts]
 
-    test "finding a post by a user", %{post1: post1, josh: josh} do
+    test "finding a post by a user",
+         %{post1: post1, post3: post3, josh: josh} do
       query = from p in Post,
                 where: p.user_id == ^josh.id,
                 preload: [:user]
 
       posts = Repo.all query
-      assert post1.id in Enum.map(posts, &(&1.id))
+      assert Enum.map(posts, &(&1.id)) |> Enum.sort == [post1.id, post3.id]
       assert hd(posts).user.username == "josh"
     end
 
     test "counting the posts in a thread", %{otp: otp} do
       query = from p in Post, where: p.thread_id == ^otp.id
 
-      posts_count = Repo.aggregate(query, :count, :id)
-      assert posts_count == 2
+      assert Repo.aggregate(query, :count, :id) == 4
+    end
+
+    test "find those mentioning a string",
+         %{post1: post1, post2: post2} do
+      query = from p in Post, where: like(p.body, "%by%")
+      ids = Repo.all(query) |> Enum.map(&(&1.id)) |> Enum.sort
+      assert ids == [post1.id, post2.id]
     end
 
   end
 
-  test "find those mentioning a string"
 
   defp create_other_users(_) do
     adam =
@@ -59,15 +65,33 @@ defmodule FirestormData.PostTest do
   defp create_sample_posts(%{otp: otp, josh: josh, adam: adam}) do
     post1 =
       %Post{}
-      |> Post.changeset(%{thread_id: otp.id, user_id: josh.id, body: "a"})
+      |> Post.changeset(%{thread_id: otp.id,
+                          user_id: josh.id,
+                          body: "post by josh"})
       |> Repo.insert!
 
     post2 =
       %Post{}
-      |> Post.changeset(%{thread_id: otp.id, user_id: adam.id, body: "b"})
+      |> Post.changeset(%{thread_id: otp.id,
+                          user_id: adam.id,
+                          body: "post by adam"})
       |> Repo.insert!
 
-    {:ok, post1: post1, post2: post2}
+    post3 =
+      %Post{}
+      |> Post.changeset(%{thread_id: otp.id,
+                          user_id: josh.id,
+                          body: "post from josh"})
+      |> Repo.insert!
+
+    post4 =
+      %Post{}
+      |> Post.changeset(%{thread_id: otp.id,
+                          user_id: adam.id,
+                          body: "post from adam"})
+      |> Repo.insert!
+
+    {:ok, post1: post1, post2: post2, post3: post3, post4: post4}
   end
 
 end
